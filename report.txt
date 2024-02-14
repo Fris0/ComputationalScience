@@ -1,0 +1,45 @@
+Author: Mark Jansen (13385569)
+
+1. Methodology
+1.1 Hardware and software
+The simulations were run on the Arm8v64 architecture. On the system the Sonama 14.2.1 OS is ran.
+At last, all experiments on the model were done with Python version 3.10.
+
+1.2 Procedure
+To get a broader insight in how Cellular Automatan function, 4 experiments in total were run.
+
+The first 3 experiments all had different spatial size, and besides that the same parameters.
+For this the simulate.py was used, and the width parameters was changed manually.
+
+The last experiment used the random parameter on true to figure out if different starting states
+affect the average run cycles compared to one without the random parameter set to true.
+This experiment was done running the simulate_random.py.
+
+All four experiments store the data in given .csv files names. The data is then used
+for further analysis.
+
+1.3 Analysis
+
+For our anaylisis three figures were made. One to show the average cycle difference with different widths,
+the second one to show different average cycle lengths between random set to true and off, and a last bar plot
+to see if the width or randomness parameters affect the amount of rules without cycle.
+
+avg_cycles_width.png:
+In the figure avg_cycles_width the avarage cycles length size increase when the width increases.
+
+avg_cycles_random.png:
+The figure shows that turning on the random parameter to true results in a higher maximum average cycle size compared
+to when it is turned off. Also, it shows that turning on the random starting state can lead to higher or lower
+avarage cycle sizes per rule.
+
+error_plot.png:
+Shows that the smaller the width has more rules with cycles found in them, then when a greater spatial size is used.
+Also, turning on the random parameter shows more rules with cycles. 
+
+
+2. Discussion and Conclusion
+The analysis of the three figures reveals key insights into the behavior of cellular automata models.
+In avg_cycles_width.png, average cycle length increases with width.
+Avg_cycles_random.png shows that enabling randomness results in higher maximum average cycle sizes and varied cycle lengths per rule.
+Finally, error_plot.png indicates that smaller widths and the presence of randomness lead to a greater number of rules containing cycles, 
+emphasizing the significance of parameter choices in cellular automata dynamics.
