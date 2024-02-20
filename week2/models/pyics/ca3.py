@@ -1,7 +1,7 @@
 """
 Author: Mark Jansen (13385569)
 
-Summary: 
+Summary:
 This program functions as a specific cellular automaton, and uses the pycx
 module to show the states in between steps. Through the GUI you can change the
 step size, interval, rule for the configurations and
@@ -24,6 +24,7 @@ Look at simulate_random.py and simulate.py how paramsweep was implemented.
 import numpy as np
 from model import Model
 from random import seed
+from random import randint
 
 
 def decimal_to_base_k(n, k):
@@ -56,7 +57,7 @@ def base_k_to_decimal(values, k):
 
     for idx, val in enumerate(values[::-1]):
         count += val * (k ** idx)
-    
+
     return (int(count))
 
 
@@ -83,7 +84,7 @@ class CASim(Model):
         """
         self.seed = (a * self.seed + c) % m
         return (self.seed)
-    
+
     def build_rule_set_langton(self):
         """
         Builds the rule-set with the walkthrough method.
@@ -92,26 +93,34 @@ class CASim(Model):
         rule_set_size = self.k ** (2 * self.r + 1)
 
         # Step 0: Obtain a random quiescent state.
-        self.quiescent_state = self.linear_congruential_gen(1664525, 1013904223, self.k)
+        self.linear_congruential_gen(1664525, 1013904223, pow(2, 32))
+        self.quiescent_state = randint(0, self.k - 1)
 
         # Step 1: Initialize rule_set to quiescent state.
         self.rule_set = [self.quiescent_state] * rule_set_size
 
         # Step 2: Set random tables to random state until Langton is met.
         measured_langton = 0
-        while (measured_langton - self.langton != 0.0):
-            pick_size = int((self.langton - measured_langton) * rule_set_size)
-            input_state = [self.linear_congruential_gen(1664525, 1013904223, rule_set_size)
+        while (measured_langton - self.langton):
+            self.linear_congruential_gen(1664525, 1013904223, pow(2, 32))
+
+            pick_size = max(1, int((self.langton - measured_langton)
+                                   * rule_set_size))
+
+            input_state = [randint(0, rule_set_size - 1)
                            for i in range(pick_size)]
 
             for rule in input_state:
                 random_state = self.quiescent_state
+
                 while (random_state == self.quiescent_state):
-                    random_state = self.linear_congruential_gen(1664525, 1013904223, self.k)
+                    random_state = randint(0, self.k - 1)
+
                 self.rule_set[rule] = random_state
 
             quiescent_count = self.rule_set.count(self.quiescent_state)
-            measured_langton = (rule_set_size - quiescent_count) / rule_set_size
+            measured_langton = ((rule_set_size - quiescent_count)
+                                / rule_set_size)
 
     def check_rule(self, inp):
         """
@@ -130,12 +139,14 @@ class CASim(Model):
         the cells in the first row. Values should be between 0 and k.
         """
         initial_array = None
-        if self.random == True:
-            seed()
+
+        if self.random is True:
+            seed(self.linear_congruential_gen(1664525, 1013904223, pow(2, 32)))
             initial_array = np.random.randint(0, high=self.k, size=self.width)
         else:
             initial_array = np.zeros(self.width)
             initial_array[self.width // 2] = self.k - 1
+
         return initial_array
 
     def reset(self):
@@ -149,7 +160,11 @@ class CASim(Model):
         self.config[0, :] = self.setup_initial_row()
 
         rule_set_size = self.k ** (2 * self.r + 1)
-        if (float(rule_set_size) % self.langton == 0):
+
+        possible_langton_values = [i / rule_set_size
+                                   for i in range(rule_set_size + 1)]
+
+        if (self.langton in possible_langton_values):
             self.build_rule_set_langton()
         else:
             print("Invalid Langton Value")
@@ -163,10 +178,12 @@ class CASim(Model):
         import matplotlib.pyplot as plt
 
         plt.cla()
+
         if not plt.gca().yaxis_inverted():
             plt.gca().invert_yaxis()
-        plt.imshow(self.config, interpolation='none', vmin=0, vmax=self.k - 1,
-                cmap=matplotlib.cm.binary)
+
+        plt.imshow(self.config, interpolation='none', vmin=0,
+                   vmax=self.k - 1, cmap=matplotlib.cm.binary)
         plt.axis('image')
         plt.title('t = %d' % self.t)
 
@@ -181,11 +198,12 @@ class CASim(Model):
 
         for patch in range(self.width):
             # We want the items r to the left and to the right of this patch,
-            # while wrapping around (e.g. index -1 is the last item on the row).
+            # while wrapping around-
+            # (e.g. index -1 is the last item on the row).
             # Since slices do not support this, we create an array with the
             # indices we want and use that to index our grid.
             indices = [i % self.width
-                    for i in range(patch - self.r, patch + self.r + 1)]
+                       for i in range(patch - self.r, patch + self.r + 1)]
             values = self.config[self.t - 1, indices]
             self.config[self.t, patch] = self.check_rule(values)
 
